@@ -1,0 +1,34 @@
+name: Deploy my Lambda Function
+
+# trigger on all push events to main branch
+on: 
+  push:
+    branches:
+      - main
+
+jobs:                         # just the one job for now.
+  build:                      # build jobs
+    runs-on: ubuntu-latest    # the job runs on a ubuntu runner
+    steps:                    # steps is a list of 
+      - name: Check out code          # step name
+        uses: actions/checkout@v2     # for the step we use the community action checkout
+      - name: Set up Python           
+        uses: actions/setup-python@v2 # setup python on the runner through a community action
+        with:
+          python-version: 3.8         # that's define the Python version 3.8
+
+      - name: Install libraries       # step to install the library
+        run: |
+            cd function               # navigate in the proper directory
+            python -m pip install --upgrade pip     # upgrade pip to the latest version
+            if [ -f requirements.txt ]; then pip install -r requirements.txt -t .; fi  # look for the file requirements.txt, if exists
+                                                                                       # it install the library listed in that file  
+      - name: Create zip bundle
+        run: |
+            cd function
+            zip -r ../${{ github.sha }}.zip .     # github.sha allow to name the package with a proper name based on a specific code release
+      - name: Archive artifact                    
+        uses: actions/upload-artifact@v2          # use a community action to upload the artifac
+        with:
+          name: zipped-bundle
+          path: ${{ github.sha }}.zip
